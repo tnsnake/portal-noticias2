@@ -5,68 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crypto Express | Notícias</title>
     <style>
-        body { font-family: 'Inter', sans-serif; margin: 0; background-color: #0f172a; color: #f8fafc; }
-        header { background: #1e293b; padding: 2rem; text-align: center; border-bottom: 2px solid #38bdf8; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #0f172a; color: #f8fafc; }
+        header { background: #1e293b; padding: 2rem; text-align: center; border-bottom: 4px solid #38bdf8; }
         .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
         .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; transition: 0.3s; }
+        .card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .card:hover { border-color: #38bdf8; transform: translateY(-3px); }
         .badge { background: #38bdf8; color: #0f172a; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
         h3 { font-size: 1.1rem; margin: 15px 0; line-height: 1.4; color: #fff; }
         .meta { font-size: 0.8rem; color: #64748b; margin-bottom: 15px; }
-        .btn { display: inline-block; color: #38bdf8; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
-        .status { text-align: center; color: #64748b; margin-bottom: 20px; font-size: 0.9rem; }
+        .btn { display: inline-block; color: #38bdf8; text-decoration: none; font-weight: bold; font-size: 0.9rem; border: 1px solid #38bdf8; padding: 5px 10px; border-radius: 4px; }
+        .btn:hover { background: #38bdf8; color: #0f172a; }
+        .status { text-align: center; color: #64748b; margin-bottom: 20px; font-size: 0.9rem; font-style: italic; }
     </style>
 </head>
 <body>
 
 <header>
     <h1>CRYPTO PANIC NEWS</h1>
-    <p>Notícias do mercado em tempo real</p>
+    <p>Notícias automáticas em tempo real</p>
 </header>
 
 <div class="container">
-    <p id="cache-status" class="status">A ligar aos mercados...</p>
-    <div id="news-grid" class="news-grid"></div>
+    <p id="cache-status" class="status">A ligar à API da CryptoPanic...</p>
+    <div id="news-grid" class="news-grid">
+        </div>
 </div>
 
 <script>
-    // A tua chave da foto aplicada corretamente
+    // A tua chave token da CryptoPanic
     const apiKey = 'dabdb2f661367ed64a493d919c04547e7f5094ab'; 
 
     async function carregarNoticias() {
         const grid = document.getElementById('news-grid');
         const status = document.getElementById('cache-status');
         
-        // Proxy para evitar o erro de CORS que viste antes
+        // Proxy para evitar o erro de CORS (bloqueio do navegador)
         const proxy = "https://api.allorigins.win/get?url=";
         const apiUrl = `https://cryptopanic.com/api/v1/posts/?auth_token=${apiKey}&kind=news&public=true`;
 
         try {
             const response = await fetch(proxy + encodeURIComponent(apiUrl));
             const rawData = await response.json();
+            // AllOrigins guarda o conteúdo dentro de 'contents'
             const data = JSON.parse(rawData.contents);
 
             if (data.results && data.results.length > 0) {
-                status.innerText = "Atualizado agora!";
+                status.innerText = "Última atualização: " + new Date().toLocaleTimeString();
                 grid.innerHTML = data.results.slice(0, 12).map(art => `
                     <div class="card">
-                        <span class="badge">${art.votes.positive > 0 ? 'Bullish' : 'Cripto'}</span>
+                        <span class="badge">${art.votes.positive > 0 ? 'Bullish' : 'Market'}</span>
                         <h3>${art.title}</h3>
                         <div class="meta">Fonte: ${art.domain}</div>
                         <a href="${art.url}" target="_blank" class="btn">LER NO PORTAL →</a>
                     </div>
                 `).join('');
             } else {
-                status.innerText = "Sem notícias novas no momento.";
+                status.innerText = "A API não devolveu notícias agora.";
             }
         } catch (error) {
-            status.innerText = "Erro na ligação. Verifique a chave ou tente mais tarde.";
+            status.innerText = "Erro ao carregar notícias. Verifica a consola.";
             console.error("Erro detalhado:", error);
         }
     }
 
+    // Executa a função assim que a página carrega
     carregarNoticias();
 </script>
+
 </body>
 </html>
