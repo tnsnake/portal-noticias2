@@ -3,78 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Notícias | Agora</title>
+    <title>Crypto Express | Notícias em Tempo Real</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f4f4; }
-        header { background: #1a1a1a; color: white; padding: 1rem 0; text-align: center; border-bottom: 4px solid #e60000; }
-        nav { background: #fff; padding: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        nav a { margin: 0 15px; text-decoration: none; color: #333; font-weight: bold; }
-        
-        .container { max-width: 1100px; margin: 20px auto; padding: 0 20px; }
-        
-        /* Notícia em Destaque */
-        .main-news { background: #fff; display: flex; flex-wrap: wrap; margin-bottom: 20px; border-radius: 8px; overflow: hidden; }
-        .main-news img { width: 100%; max-width: 600px; object-fit: cover; background: #ddd; min-height: 300px; }
-        .main-news-content { padding: 20px; flex: 1; }
-        .category { color: #e60000; text-transform: uppercase; font-size: 0.8rem; font-weight: bold; }
-
-        /* Grade de Notícias */
+        body { font-family: 'Inter', sans-serif; margin: 0; background-color: #0f172a; color: #f8fafc; }
+        header { background: #1e293b; padding: 2rem; text-align: center; border-bottom: 2px solid #38bdf8; }
+        .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
         .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .card img { width: 100%; height: 180px; background: #eee; }
+        .card { background: #1e293b; border-radius: 12px; overflow: hidden; transition: 0.3s; border: 1px solid #334155; }
+        .card:hover { transform: translateY(-5px); border-color: #38bdf8; }
+        .card img { width: 100%; height: 180px; object-fit: cover; background: #334155; }
         .card-body { padding: 15px; }
-        
-        h2 { margin-top: 10px; }
-        footer { text-align: center; padding: 20px; background: #1a1a1a; color: white; margin-top: 40px; }
+        .card-body h3 { font-size: 1.1rem; margin: 0 0 10px 0; color: #38bdf8; }
+        .card-body p { font-size: 0.9rem; color: #94a3b8; line-height: 1.4; }
+        .badge { background: #38bdf8; color: #0f172a; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+        .status { text-align: center; font-size: 0.8rem; color: #64748b; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>MUNDO HOJE</h1>
+    <h1>BITCOIN & CRYPTO NEWS</h1>
+    <p>Atualizado automaticamente via API</p>
 </header>
 
-<nav>
-    <a href="#">Política</a>
-    <a href="#">Tecnologia</a>
-    <a href="#">Esportes</a>
-    <a href="#">Entretenimento</a>
-</nav>
-
 <div class="container">
-    <article class="main-news">
-        <img src="https://via.placeholder.com/600x400" alt="Imagem da notícia">
-        <div class="main-news-content">
-            <span class="category">Urgente</span>
-            <h2>O impacto das novas tecnologias no mercado de trabalho em 2026</h2>
-            <p>Especialistas debatem como a inteligência artificial e a automação estão redefinindo profissões tradicionais e criando novas oportunidades...</p>
-            <button style="background:#e60000; color:white; border:none; padding:10px 20px; cursor:pointer;">Ler mais</button>
+    <p id="cache-status" class="status">Verificando notícias...</p>
+    <div id="news-grid" class="news-grid">
         </div>
-    </article>
-
-    <div class="news-grid">
-        <div class="card">
-            <img src="https://via.placeholder.com/300x180" alt="Notícia">
-            <div class="card-body">
-                <span class="category">Esportes</span>
-                <h3>Nova temporada de Fórmula 1 promete recordes</h3>
-                <p>Equipes apresentam carros com design inovador para as pistas.</p>
-            </div>
-        </div>
-        <div class="card">
-            <img src="https://via.placeholder.com/300x180" alt="Notícia">
-            <div class="card-body">
-                <span class="category">Economia</span>
-                <h3>Bolsa de valores atinge máxima histórica nesta quinta</h3>
-                <p>Investidores reagem positivamente aos novos dados do setor industrial.</p>
-            </div>
-        </div>
-    </div>
 </div>
 
-<footer>
-    &copy; 2026 Portal Mundo Hoje - Todos os direitos reservados.
-</footer>
+<script>
+    // CONFIGURAÇÃO - COLOQUE SUA CHAVE AQUI
+    const apiKey = 'dabdb2f661367ed64a493d919c04547e7f5094ab'; 
+    const query = 'bitcoin OR crypto OR ethereum';
+    const cacheTime = 30 * 60 * 1000; // 30 minutos em milissegundos
+
+    async function carregarNoticias() {
+        const grid = document.getElementById('news-grid');
+        const status = document.getElementById('cache-status');
+        
+        const lastFetch = localStorage.getItem('crypto_last_fetch');
+        const cachedData = localStorage.getItem('crypto_news_data');
+        const now = new Date().getTime();
+
+        // 1. Verificar se temos dados no cache e se ainda são válidos
+        if (lastFetch && cachedData && (now - lastFetch < cacheTime)) {
+            console.log("Usando dados do cache para economizar API");
+            exibirNoticias(JSON.parse(cachedData));
+            status.innerText = "Exibindo notícias do cache (Atualiza em 30min)";
+            return;
+        }
+
+        // 2. Se não tiver cache ou expirou, busca na API
+        try {
+            status.innerText = "Buscando novas notícias no mercado...";
+            const response = await fetch(`https://gnews.io/api/v4/search?q=${query}&lang=pt&apikey=${apiKey}`);
+            const data = await response.json();
+
+            if (data.articles) {
+                localStorage.setItem('crypto_news_data', JSON.stringify(data.articles));
+                localStorage.setItem('crypto_last_fetch', now);
+                exibirNoticias(data.articles);
+                status.innerText = "Notícias atualizadas agora!";
+            }
+        } catch (error) {
+            status.innerText = "Erro ao carregar notícias. Tentando usar cache antigo...";
+            if (cachedData) exibirNoticias(JSON.parse(cachedData));
+        }
+    }
+
+    function exibirNoticias(articles) {
+        const grid = document.getElementById('news-grid');
+        grid.innerHTML = articles.map(art => `
+            <div class="card">
+                <img src="${art.image || 'https://via.placeholder.com/300x180?text=Crypto'}" alt="Notícia">
+                <div class="card-body">
+                    <span class="badge">NOVO</span>
+                    <h3>${art.title}</h3>
+                    <p>${art.description.substring(0, 100)}...</p>
+                    <a href="${art.url}" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold; font-size: 0.8rem;">LER MAIS →</a>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    carregarNoticias();
+</script>
 
 </body>
 </html>
