@@ -1,38 +1,72 @@
-// Substitui esta parte no teu código
-const apiKey = 'dabdb2f661367ed64a493d919c04547e7f5094ab'; 
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Express | Notícias</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; margin: 0; background-color: #0f172a; color: #f8fafc; }
+        header { background: #1e293b; padding: 2rem; text-align: center; border-bottom: 2px solid #38bdf8; }
+        .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; transition: 0.3s; }
+        .card:hover { border-color: #38bdf8; transform: translateY(-3px); }
+        .badge { background: #38bdf8; color: #0f172a; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+        h3 { font-size: 1.1rem; margin: 15px 0; line-height: 1.4; color: #fff; }
+        .meta { font-size: 0.8rem; color: #64748b; margin-bottom: 15px; }
+        .btn { display: inline-block; color: #38bdf8; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
+        .status { text-align: center; color: #64748b; margin-bottom: 20px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
 
-async function carregarNoticias() {
-    const status = document.getElementById('cache-status');
-    // Usamos um serviço para evitar o erro de CORS que viste antes
-    const proxy = "https://corsproxy.io/?"; 
-    const url = `https://cryptopanic.com/api/v1/posts/?auth_token=${apiKey}&kind=news&public=true`;
+<header>
+    <h1>CRYPTO PANIC NEWS</h1>
+    <p>Notícias do mercado em tempo real</p>
+</header>
 
-    try {
-        status.innerText = "Buscando novidades no mercado...";
-        const response = await fetch(proxy + encodeURIComponent(url));
-        const data = await response.json();
+<div class="container">
+    <p id="cache-status" class="status">A ligar aos mercados...</p>
+    <div id="news-grid" class="news-grid"></div>
+</div>
 
-        if (data.results) {
-            exibirNoticias(data.results);
-            status.innerText = "Mercado atualizado via CryptoPanic!";
+<script>
+    // A tua chave da foto aplicada corretamente
+    const apiKey = 'dabdb2f661367ed64a493d919c04547e7f5094ab'; 
+
+    async function carregarNoticias() {
+        const grid = document.getElementById('news-grid');
+        const status = document.getElementById('cache-status');
+        
+        // Proxy para evitar o erro de CORS que viste antes
+        const proxy = "https://api.allorigins.win/get?url=";
+        const apiUrl = `https://cryptopanic.com/api/v1/posts/?auth_token=${apiKey}&kind=news&public=true`;
+
+        try {
+            const response = await fetch(proxy + encodeURIComponent(apiUrl));
+            const rawData = await response.json();
+            const data = JSON.parse(rawData.contents);
+
+            if (data.results && data.results.length > 0) {
+                status.innerText = "Atualizado agora!";
+                grid.innerHTML = data.results.slice(0, 12).map(art => `
+                    <div class="card">
+                        <span class="badge">${art.votes.positive > 0 ? 'Bullish' : 'Cripto'}</span>
+                        <h3>${art.title}</h3>
+                        <div class="meta">Fonte: ${art.domain}</div>
+                        <a href="${art.url}" target="_blank" class="btn">LER NO PORTAL →</a>
+                    </div>
+                `).join('');
+            } else {
+                status.innerText = "Sem notícias novas no momento.";
+            }
+        } catch (error) {
+            status.innerText = "Erro na ligação. Verifique a chave ou tente mais tarde.";
+            console.error("Erro detalhado:", error);
         }
-    } catch (error) {
-        status.innerText = "Erro ao conectar. Tente novamente em instantes.";
-        console.error(error);
     }
-}
 
-// Ajuste na função exibirNoticias para ler o formato da CryptoPanic
-function exibirNoticias(results) {
-    const grid = document.getElementById('news-grid');
-    grid.innerHTML = results.slice(0, 10).map(art => `
-        <div class="card">
-            <div class="card-body">
-                <span class="badge">${art.votes.positive > 0 ? 'Bullish' : 'News'}</span>
-                <h3>${art.title}</h3>
-                <p>Fonte: ${art.domain}</p>
-                <a href="${art.url}" target="_blank" style="color: #38bdf8; text-decoration: none; font-weight: bold;">LER MAIS →</a>
-            </div>
-        </div>
-    `).join('');
-}
+    carregarNoticias();
+</script>
+</body>
+</html>
